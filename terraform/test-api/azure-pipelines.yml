@@ -1,0 +1,54 @@
+# Deployment IaC with terraform
+
+trigger:
+  - master
+
+variables:
+  pythonVersion: 3.8
+  vmImageName: 'ubuntu-latest'
+  projectRoot: $(System.DefaultWorkingDirectory)
+
+stages:
+- stage: Deploy_DEV
+  displayName: 'Deploy to DEV environment'
+  condition: succeeded()
+  variables:
+  - group: azure_key_vault
+  - name: var_stage
+    value: 'test'
+
+  jobs:
+    - template: ../../../.azure/iac-deployment-template.yml
+      parameters:
+        azureConnectionName: 'service_connection_test_environment'
+        environment: 'Service principal for test environment'
+
+- stage: Deploy_STAGE
+  displayName: 'Deploy to STAGE environment'
+  condition: succeeded()
+  variables:
+  - group: azure_key_vault
+  - name: var_stage
+    value: 'stage'
+  dependsOn:
+    - Deploy_DEV
+  jobs:
+    - template: ../../../.azure/iac-deployment-template.yml
+      parameters:
+        azureConnectionName: 'service_connection_stage_environment'
+        environment: 'Service principal for stage environment'
+
+- stage: Deploy_PROD
+  displayName: 'Deploy to PROD environment'
+  condition: succeeded()
+  variables:
+  - group: azure_key_vault
+  - name: var_stage
+    value: 'prod'
+  dependsOn:
+    - Deploy_STAGE
+  jobs:
+    - template: ../../../.azure/iac-deployment-template.yml
+      parameters:
+        azureConnectionName: 'service_connection_prod_environment'
+        environment: 'Service principal for prod environment'

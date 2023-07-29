@@ -1,0 +1,5 @@
+rg-name = "rg-weu-api-stage"
+stage = "stage"
+location = "westeurope"
+sku-name = "B_Gen5_1"
+public-network-access = "true"
